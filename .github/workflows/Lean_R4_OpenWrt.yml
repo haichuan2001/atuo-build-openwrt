@@ -129,13 +129,15 @@ jobs:
       run: |
         cd $OPENWRTROOT
         ./scripts/feeds install -a
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
 
     - name: Load custom configuration
       run: |
-        [ -e files ] && mv files immortalwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE immortalwrt/.config
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x $DIY_P2_SH
-        cd immortalwrt
+        cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
         
    # - name: Load Custom Configuration
