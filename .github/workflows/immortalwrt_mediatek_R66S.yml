@@ -10,14 +10,26 @@ name: 编译immortalwrt固件r66s—master
 
 # 触发条件
 on:
-  ## 支持手动触发
+    ## 支持手动触发
+  repository_dispatch:
   workflow_dispatch:
-  ## 定时触发：每天 14:00 UTC 执行
+## 定时触发：每天 14:00 UTC 执行
   # schedule:
   #  - cron: 0 14 * * *
   ## 当有人 star 仓库时触发
   # watch:
   # types: started
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+
+        CACHE_BUILD:
+          description: '缓存加速'
+          required: false
+          default: 'true'
+          type: boolean
 
 # 全局环境变量
 env:
@@ -30,8 +42,8 @@ env:
  # CONFIG_FILE: immortalwrt/mediatek/defconfig
   CONFIG_FILE: configs/lean/R66S.config
   ##自定义配置
-  DIY_P1_SH: immortalwrt/diy-part1.sh
-  DIY_P2_SH: immortalwrt/diy-part2.sh
+  DIY_P1_SH: diy-part1.sh
+  DIY_P2_SH: diy-part2.sh
   ## 固件name
   Firmware_Name: immortalwrt-R66S
   # 是否缓存编译工具链
