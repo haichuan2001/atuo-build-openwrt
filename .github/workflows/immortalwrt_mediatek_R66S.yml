@@ -55,23 +55,20 @@ env:
 # 工作流任务
 jobs:
   build:
-    ##任务名
-    name: rockchip-armv8-fastrhino_r66S
-    # 运行环境：Ubuntu 22.04
     runs-on: ubuntu-22.04
     # 仅允许仓库所有者触发，或者是首次触发
     if: github.event.repository.owner.id == github.event.sender.id || ! github.event.sender.id
    # 构建任务名称，显示目标架构和 OpenWrt 版本
     name: build ${{ matrix.target }} ${{ matrix.openwrt }}
 #
-  strategy:
+    strategy:
    #   # 允许部分任务失败
       fail-fast: false
       # 构建矩阵：不同目标和 OpenWrt 版本组合
     #  matrix:
    #   target: [armv8]
    #   openwrt: [lede, immortalwrt]
-   steps:
+    steps:
     - name: Checkout
       uses: actions/checkout@v4
       
