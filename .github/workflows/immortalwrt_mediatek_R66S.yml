@@ -34,8 +34,6 @@ env:
   DIY_P2_SH: immortalwrt/diy-part2.sh
   ## 固件name
   Firmware_Name: immortalwrt-R66S
-  # Clash 内核架构
-  CLASH_KERNEL: arm64
   # 是否缓存编译工具链
   CACHE_TOOLCHAIN: true
   # 是否上传 bin 目录。即包含所有 ipk 文件和固件的目录。默认false
@@ -63,16 +61,17 @@ jobs:
     runs-on: ubuntu-22.04
     # 仅允许仓库所有者触发，或者是首次触发
     if: github.event.repository.owner.id == github.event.sender.id || ! github.event.sender.id
-    # 构建任务名称，显示目标架构和 OpenWrt 版本
+   # 构建任务名称，显示目标架构和 OpenWrt 版本
     name: build ${{ matrix.target }} ${{ matrix.openwrt }}
-#strategy:
+#
+  strategy:
    #   # 允许部分任务失败
-   #   fail-fast: false
+      fail-fast: false
       # 构建矩阵：不同目标和 OpenWrt 版本组合
     #  matrix:
    #   target: [armv8]
    #   openwrt: [lede, immortalwrt]
-  steps:
+   steps:
     - name: Checkout
       uses: actions/checkout@v4
       
@@ -95,27 +94,24 @@ jobs:
         testing: false
 
 
-    ##: 初始化系统环境
+##: 初始化系统环境
     - name: Initialize the compilation environment
       env:
 # 设置无交互模式
-      DEBIAN_FRONTEND: noninteractive  
+        DEBIAN_FRONTEND: noninteractive  
       run: |
-       sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android $AGENT_TOOLSDIRECTORY
-# 关闭并删除交换文件
-       sudo swapoff -a && sudo rm -f /swapfile /mnt/swapfile
-# 卸载不需要的软件包
-        sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-        sudo -E apt-get -qq purge azure-cli ghc* zulu* hhvm llvm* firefox powershell openjdk* dotnet* google* mysql* php* android* rename speedtest-cli   
-# 更新系统并安装必要的软件包
-     sudo -E apt-get -qq update
-        sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev swig libpython3-dev aria2 jq subversion qemu-utils ccache rename libelf-dev
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-2004)
+        sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev swig libpython3-dev aria2 jq subversion qemu-utils ccache rename libelf-dev
+        sudo -E apt-get -qq purge azure-cli ghc* zulu* hhvm llvm* firefox powershell openjdk* dotnet* google* mysql* php* android* rename speedtest-cli
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
-      sudo -E apt-get -y clean
-      # 卸载不需要的软件包
-            sudo timedatectl set-timezone "$TZ"
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
+    
+
 
     - name: Initialize Environment and Display System Info
       env:
