@@ -34,7 +34,7 @@ env:
   UPLOAD_RELEASE: true
   # 时区设置
   TZ: Asia/Shanghai
-env:
+  env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
   CONFIG_FILE: configs/lean/R66S.config
