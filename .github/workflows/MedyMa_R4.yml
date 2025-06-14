@@ -6,7 +6,7 @@
 # Blog: https://p3terx.com
 #=================================================
 # 工作流名称：构建 name 固件#
-name: 编译immortalwrt/padavanonly-R4
+name: MedyMa编译padavanonly-R4
 # 触发条件
 # 触发条件
 on:
