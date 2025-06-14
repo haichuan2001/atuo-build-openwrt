@@ -9,15 +9,28 @@
 name: 编译LEAN固件R4_master
 
 # 触发条件
+# 触发条件
 on:
-  ## 支持手动触发
+    ## 支持手动触发
+  repository_dispatch:
   workflow_dispatch:
-  ## 定时触发：每天 14:00 UTC 执行
+## 定时触发：每天 14:00 UTC 执行
   # schedule:
   #  - cron: 0 14 * * *
   ## 当有人 star 仓库时触发
   # watch:
   # types: started
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+
+        CACHE_BUILD:
+          description: '缓存加速'
+          required: false
+          default: 'true'
+          type: boolean
 
 # 全局环境变量
 env:
@@ -38,15 +51,14 @@ env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
   CONFIG_FILE: configs/lean/R4.config
-  #DIY_SH: scripts/lean.sh
-  DIY_P1_SH: immortalwrt/diy-part1.sh
-  DIY_P2_SH: immortalwrt/diy-part2.sh
-  Firmware_Name: LEAN-Banana-Pi-BPI-R4
+  DIY_SH: scripts/lean.sh
+  DIY_P1_SH: diy-part1.sh
+  DIY_P2_SH: diy-part2.sh
+  Firmware_Name: LEAN-BPI-R4
   IPV6MOD_IN_FIRMWARE: true
   KMODS_IN_FIRMWARE: true
   UPLOAD_WETRANSFER: true
-  #UPLOAD_RELEASE: true
-  ##TZ: Asia/Shanghai
+ 
 
 jobs:
   Build:
