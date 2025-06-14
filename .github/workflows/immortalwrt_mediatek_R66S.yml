@@ -19,16 +19,6 @@ on:
   # watch:
   # types: started
 
-env:
-  # 是否上传 bin 目录
-  UPLOAD_BIN_DIR: false
-  # 是否上传构建产物
-  UPLOAD_ARTIFACT: false
-  # 是否发布 Release
-  UPLOAD_RELEASE: true
-  # 时区设置
-  TZ: Asia/Shanghai
-
 # 全局环境变量
 env:
    # 源码仓库来源
@@ -106,107 +96,107 @@ jobs:
 
 
     ##: 初始化系统环境
-  - name: Initialize the compilation environment
-    env:
+    - name: Initialize the compilation environment
+      env:
 # 设置无交互模式
       DEBIAN_FRONTEND: noninteractive  
-    run: |
-      sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android $AGENT_TOOLSDIRECTORY
+      run: |
+       sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android $AGENT_TOOLSDIRECTORY
 # 关闭并删除交换文件
-   sudo swapoff -a && sudo rm -f /swapfile /mnt/swapfile
+       sudo swapoff -a && sudo rm -f /swapfile /mnt/swapfile
 # 卸载不需要的软件包
-      sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-      sudo -E apt-get -qq purge azure-cli ghc* zulu* hhvm llvm* firefox powershell openjdk* dotnet* google* mysql* php* android* rename speedtest-cli   
+        sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+        sudo -E apt-get -qq purge azure-cli ghc* zulu* hhvm llvm* firefox powershell openjdk* dotnet* google* mysql* php* android* rename speedtest-cli   
 # 更新系统并安装必要的软件包
-      sudo -E apt-get -qq update
-      sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev swig libpython3-dev aria2 jq subversion qemu-utils ccache rename libelf-dev
-      sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-      sudo -E apt-get -qq autoremove --purge
-      sudo -E apt-get -qq clean
+     sudo -E apt-get -qq update
+        sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev swig libpython3-dev aria2 jq subversion qemu-utils ccache rename libelf-dev
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
       sudo -E apt-get -y clean
-   # 卸载不需要的软件包
-      sudo timedatectl set-timezone "$TZ"
+      # 卸载不需要的软件包
+            sudo timedatectl set-timezone "$TZ"
 
-  - name: Initialize Environment and Display System Info
-    env:
-      DEBIAN_FRONTEND: noninteractive
-    run: |
-      chmod +x $OPENWRT_NAME/*.sh
-      $GITHUB_WORKSPACE/$OPENWRT_NAME/system-Information.sh
+    - name: Initialize Environment and Display System Info
+      env:
+       DEBIAN_FRONTEND: noninteractive
+      run: |
+        chmod +x $OPENWRT_NAME/*.sh
+        $GITHUB_WORKSPACE/$OPENWRT_NAME/system-Information.sh
 
-  - name: Download firmware source code
-    run: |
-      git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+    - name: Download firmware source code
+      run: |
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
 
-  - name: Update & install feeds
-    working-directory: ./openwrt
-    run: |
-      ./scripts/feeds update -a
-      ./scripts/feeds install -a
+    - name: Update & install feeds
+      working-directory: ./openwrt
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
  
-  - name: Load feeds.conf.default
-    run: |
-      chmod +x $OPENWRT_NAME/*.sh
-      cd openwrt
-      $GITHUB_WORKSPACE/$DIY_P1_SH
+    - name: Load feeds.conf.default
+      run: |
+        chmod +x $OPENWRT_NAME/*.sh
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
 
-  - name: Load config
-    run: |
-      [ -e "$CONFIG_FILE" ] && cat "$CONFIG_FILE" > openwrt/.config
-      chmod +x $OPENWRT_NAME/*.sh && cd openwrt
-      $GITHUB_WORKSPACE/$DIY_P2_SH
+    - name: Load config
+      run: |
+        [ -e "$CONFIG_FILE" ] && cat "$CONFIG_FILE" > openwrt/.config
+        chmod +x $OPENWRT_NAME/*.sh && cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
 
-  - name: Download the installation package
-    id: package
-    run: |
-      cd openwrt
-      make defconfig
-      cat .config
-      make download -j$(nproc)
-      find dl -size -1024c -exec ls -l {} \;
-      find dl -size -1024c -exec rm -f {} \;
+    - name: Download the installation package
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        cat .config
+        make download -j$(nproc)
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
 
-  - name: Compile the firmware
-    id: compile
-    run: |
-      cd openwrt
-      echo -e "$(nproc) thread compile"
-      make -j$(nproc) || make -j1 || make -j1 V=s
-      echo "date1=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
-      echo "date2=$(date "+%Y年%m月%d日")" >> $GITHUB_ENV
-      echo "status=success" >> $GITHUB_OUTPUT
+    - name: Compile the firmware
+      id: compile
+      run: |
+        cd openwrt
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 || make -j1 V=s
+        echo "date1=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+        echo "date2=$(date "+%Y年%m月%d日")" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
 
-  - name: Organize and Rename Files
-    id: organize
-    if: ${{ env.UPLOAD_FIRMWARE == 'true' && !cancelled() }}
-    run: |
-      cd openwrt/bin/targets/mediatek/filogic
-      rm -rf packages *mt798* *.config *.buildinfo *.json sha256sums 
-      echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-      echo "status=success" >> $GITHUB_OUTPUT
+    - name: Organize and Rename Files
+      id: organize
+      if: ${{ env.UPLOAD_FIRMWARE == 'true' && !cancelled() }}
+      run: |
+        cd openwrt/bin/targets/mediatek/filogic
+        rm -rf packages *mt798* *.config *.buildinfo *.json sha256sums 
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
  
-  - name: Upload the firmware to github
-    uses: actions/upload-artifact@main
-    if: steps.organize.outputs.status == 'success' && !cancelled()
-    with:
-    name: ${{ env.date1 }}_${{ env.OPENWRT_NAME }}_${{ env.OPENWRT_DEVICE }}
-    path: ${{ env.FIRMWARE }}
+    - name: Upload the firmware to github
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: ${{ env.date1 }}_${{ env.OPENWRT_NAME }}_${{ env.OPENWRT_DEVICE }}
+        path: ${{ env.FIRMWARE }}
 
-  - name: Generate release tags
-    id: tag
-    if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-    run: |
-      echo "release_tag=${{ env.date2 }}" >> $GITHUB_OUTPUT
-      touch release.txt
-      echo "📥 固件下载" >> release.txt
-      echo "status=success" >> $GITHUB_OUTPUT
+    - name: Generate release tags
+      id: tag
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      run: |
+        echo "release_tag=${{ env.date2 }}" >> $GITHUB_OUTPUT
+        touch release.txt
+        echo "📥 固件下载" >> release.txt
+        echo "status=success" >> $GITHUB_OUTPUT
 
-  - name: Publish to release
-    uses: softprops/action-gh-release@v1
-    if: steps.tag.outputs.status == 'success' && !cancelled()
-    env:
-     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    with:
+    - name: Publish to release
+      uses: softprops/action-gh-release@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
       files: ${{ env.FIRMWARE }}/*
       name: ${{ env.date3 }}
       tag_name: ${{ steps.tag.outputs.release_tag }}
