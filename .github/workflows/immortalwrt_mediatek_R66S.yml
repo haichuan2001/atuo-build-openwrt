@@ -24,8 +24,7 @@ on:
         description: 'SSH connection to Actions'
         required: false
         default: 'false'
-
-        CACHE_BUILD:
+      CACHE_BUILD:
           description: '缓存加速'
           required: false
           default: 'true'
@@ -42,7 +41,7 @@ env:
  # CONFIG_FILE: immortalwrt/mediatek/defconfig
   CONFIG_FILE: configs/R66S.config
   ##自定义配置
-  DIY_P1_SH: diy-part1.sh
+  DIY_P1_SH: diy-imm-part1.sh
   DIY_P2_SH: diy-part2.sh
   ## 固件name
   Firmware_Name: immortalwrt-R66S
@@ -83,51 +82,64 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      
-    - name: Free Disk Space
-      uses: endersonmenezes/free-disk-space@main
+
+    - name: Combine Disks
+      uses: easimon/maximize-build-space@master
       with:
-        remove_android: true
-        remove_dotnet: true
-        remove_haskell: true
-        remove_tool_cache: true
-        remove_swap: true
-        remove_packages: "android* azure* clang* dotnet* firefox* ghc* golang* google* libclang* libgl1* \
-          lld* llvm* microsoft* mongodb* mono* mysql* nodejs* openjdk* php* postgresql* powershell* snap* temurin* yarn* zulu*"
-        remove_packages_one_command: true
-        remove_folders: "/etc/apt/sources.list.d* /etc/mono* /etc/mysql* /usr/include/linux/android* /usr/lib/llvm* /usr/lib/mono* \
-          /usr/local/lib/android* /usr/local/lib/node_modules* /usr/local/share/chromium* /usr/local/share/powershell* /usr/local/share/vcpkg/ports/azure* \
-          /usr/local/share/vcpkg/ports/google* /usr/local/share/vcpkg/ports/libpq/android* /usr/local/share/vcpkg/ports/llvm* /usr/local/share/vcpkg/ports/mysql* \
-          /usr/local/share/vcpkg/ports/snap* /usr/share/azure* /usr/share/dotnet* /usr/share/glade* /usr/share/miniconda* /usr/share/php* /usr/share/swift \
-          /var/lib/mysql* /var/log/azure*"
-        testing: false
-
-
-    - name: Initialize the compilation environment
+        swap-size-mb: 1024
+        temp-reserve-mb: 100
+        root-reserve-mb: 1024
+  
+   
+    - name: Initialize compilation environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
         docker rmi $(docker images -q)
-        sudo -E apt-get -qq update
-        sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext \
-        git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev swig libpython3-dev aria2 jq subversion qemu-utils ccache rename libelf-dev
-        sudo -E apt-get -qq purge azure-cli ghc* zulu* hhvm llvm* firefox powershell openjdk* dotnet* google* mysql* php* android* rename speedtest-cli
-        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-        sudo -E apt-get -qq autoremove --purge
-        sudo -E apt-get -qq clean
+        sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android $AGENT_TOOLSDIRECTORY
+        sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+        sudo -E apt-get -y update
+        sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+        sudo -E systemctl daemon-reload
+        sudo -E apt-get -y autoremove --purge
+        sudo -E apt-get -y clean
+        sudo -E apt-get -y install clang
         sudo timedatectl set-timezone "$TZ"
 
- 
-    - name: Initialize Environment and Display System Info
-      env:
-       DEBIAN_FRONTEND: noninteractive
+    - name: Clone Source Code
       run: |
-        chmod +x $OPENWRT_NAME/*.sh
-        $GITHUB_WORKSPACE/$OPENWRT_NAME/system-Information.sh
+        df -hT $GITHUB_WORKSPACE
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        cd openwrt
+        echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
+        COMMIT_AUTHOR=$(git show -s --date=short --format="作者: %an")
+        echo "COMMIT_AUTHOR=$COMMIT_AUTHOR" >> $GITHUB_ENV
+        COMMIT_DATE=$(git show -s --date=short --format="时间: %ci")
+        echo "COMMIT_DATE=$COMMIT_DATE" >> $GITHUB_ENV
+        COMMIT_MESSAGE=$(git show -s --date=short --format="内容: %s")
+        echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
+        COMMIT_HASH=$(git show -s --date=short --format="hash: %H")
+        echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_ENV
 
-    - name: Download firmware source code
+    - name: Generate Variables
       run: |
-        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        cp $CONFIG_FILE $OPENWRT_PATH/.config
+        cd $OPENWRT_PATH
+        make defconfig > /dev/null 2>&1
+        SOURCE_REPO="$(echo $REPO_URL | awk -F '/' '{print $(NF)}')"
+        echo "SOURCE_REPO=$SOURCE_REPO" >> $GITHUB_ENV
+        DEVICE_TARGET=$(cat .config | grep CONFIG_TARGET_BOARD | awk -F '"' '{print $2}')
+        echo "DEVICE_TARGET=$DEVICE_TARGET" >> $GITHUB_ENV
+        DEVICE_SUBTARGET=$(cat .config | grep CONFIG_TARGET_SUBTARGET | awk -F '"' '{print $2}')
+        echo "DEVICE_SUBTARGET=$DEVICE_SUBTARGET" >> $GITHUB_ENV
+
+    - name: Cache Toolchain
+      if: env.CACHE_TOOLCHAIN == 'true'
+      uses: HiGarfield/cachewrtbuild@main
+      with:
+        ccache: false
+        mixkey: ${{ env.SOURCE_REPO }}-${{ env.REPO_BRANCH }}-${{ env.DEVICE_TARGET }}-${{ env.DEVICE_SUBTARGET }}
+        prefix: ${{ env.OPENWRT_PATH }}
 
     - name: Update & install feeds
       working-directory: ./openwrt
@@ -152,7 +164,7 @@ jobs:
       run: |
         cd openwrt
         make defconfig
-        cat .config
+#cat .config
         make download -j$(nproc)
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
@@ -167,14 +179,14 @@ jobs:
         echo "date2=$(date "+%Y年%m月%d日")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: Organize and Rename Files
+    - name: Organize files
       id: organize
-      if: ${{ env.UPLOAD_FIRMWARE == 'true' && !cancelled() }}
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cd openwrt/bin/targets/mediatek/filogic
-        rm -rf packages *mt798* *.config *.buildinfo *.json sha256sums 
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "status=success" >> $GITHUB_OUTPUT
+        echo "::set-output name=status::success"
  
     - name: Upload the firmware to github
       uses: actions/upload-artifact@main
