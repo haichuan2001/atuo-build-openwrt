@@ -159,16 +159,15 @@ jobs:
         chmod +x $OPENWRT_NAME/*.sh && cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: Download the installation package
+    - name: Download package
       id: package
       run: |
         cd openwrt
         make defconfig
-#cat .config
-        make download -j$(nproc)
+        make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-
+        
     - name: Compile the firmware
       id: compile
       run: |
