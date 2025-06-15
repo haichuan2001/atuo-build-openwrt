@@ -1,4 +1,4 @@
-name: r66s_(master)OpenWrt
+name: immortalwrt_r66s_master
 
 # 触发条件
 on:
@@ -25,7 +25,7 @@ on:
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
   REPO_BRANCH: master
-  CONFIG_FILE: configs/r66s(master).config
+  CONFIG_FILE: configs/immortalwrt-r66s(master).config
   DIY_SCRIPT: diy-script.sh
   CLASH_KERNEL: arm64
   CACHE_TOOLCHAIN: true
