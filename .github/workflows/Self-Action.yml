@@ -9,7 +9,7 @@
 name: Lean OpenWrt
 
 on:
-  # repository_dispatch:
+  repository_dispatch:
   workflow_dispatch:
   #schedule:
   #  - cron: 0 17 * * 5
