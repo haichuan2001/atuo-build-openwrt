@@ -1,26 +1,9 @@
 name: immortalwrt_mediatek
 
-# 触发条件
 on:
-    ## 支持手动触发
-  repository_dispatch:
+  schedule:
+    - cron: 0 16 * * *
   workflow_dispatch:
-## 定时触发：每天 14:00 UTC 执行
-  # schedule:
-  #  - cron: 0 14 * * *
-  ## 当有人 star 仓库时触发
-  # watch:
-  # types: started
-    inputs:
-        ssh:
-          description: 'SSH connection to Actions'
-          required: false
-          default: 'false'
-        CACHE_BUILD:
-          description: '缓存加速'
-          required: false
-          default: 'true'
-          type: boolean
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
@@ -29,7 +12,6 @@ env:
   DIY_P1_SH: immortalwrt/diy-part1.sh
   DIY_P2_SH: immortalwrt/diy-part2.sh
   UPLOAD_FIRMWARE: true
-  UPLOAD_RELEASE: true
   UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
   OPENWRT_NAME: immortalwrt
