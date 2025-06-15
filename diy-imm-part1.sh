@@ -17,15 +17,9 @@ rm -rf feeds/luci/applications/luci-app-argon-config
 # Clone community packages to package/community
 mkdir package/community
 pushd package/community
-# clone --depth=1 https://github.com/fw876/helloworld
-git clone --depth=1 https://github.com/kenzok8/openwrt-packages
+git clone --depth=1 https://github.com/fw876/helloworld
+# git clone --depth=1 https://github.com/kenzok8/openwrt-packages
 git clone --depth=1 https://github.com/haiibo/openwrt-packages
-git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall
-git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall-packages
-git clone --depth=1 https://github.com/nikkinikki-org/OpenWrt-nikki
-git clone --depth=1 https://github.com/DHDAXCW/dhdaxcw-app
-git clone --depth=1 https://github.com/jerrykuku/luci-theme-argon
-git clone --depth=1 https://github.com/jerrykuku/luci-app-argon-config
 merge_package https://github.com/kenzok8/jell jell/luci-app-fan
 merge_package https://github.com/DHDAXCW/lede-rockchip lede-rockchip/package/wwan
 merge_package https://github.com/kenzok8/jell jell/luci-app-serverchan
