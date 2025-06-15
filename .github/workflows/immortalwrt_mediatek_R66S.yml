@@ -39,6 +39,7 @@ env:
   REPO_BRANCH: master
   ## 配置文件
  # CONFIG_FILE: immortalwrt/mediatek/defconfig
+  FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: configs/R66S.config
   ##自定义配置
   DIY_P1_SH: diy-imm-part1.sh
