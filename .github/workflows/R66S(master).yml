@@ -26,7 +26,7 @@ env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
   REPO_BRANCH: master
   CONFIG_FILE: configs/lean/immortalwrt-r66s(master).config
-  DIY_SCRIPT: diy-script.sh
+  DIY_SCRIPT: scripts/diy-script.sh
   CLASH_KERNEL: arm64
   CACHE_TOOLCHAIN: true
   UPLOAD_BIN_DIR: false
