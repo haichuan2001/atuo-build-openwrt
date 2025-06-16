@@ -7,8 +7,8 @@ on:
      inputs:
         ssh:
           description: 'SSH connection to Actions'
-          required: false
-          default: 'false'
+          required: true
+          default: 'true'
         CACHE_BUILD:
           description: '缓存加速'
           required: false
