@@ -27,6 +27,7 @@ env:
   REPO_BRANCH: master
   CONFIG_FILE: configs/lean/R4.config
   DIY_SH: scripts/lean.sh
+  SSH_ACTIONS: true
   IPV6MOD_IN_FIRMWARE: true
   KMODS_IN_FIRMWARE: true
   UPLOAD_WETRANSFER: true
