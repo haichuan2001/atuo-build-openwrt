@@ -4,7 +4,10 @@ on:
   schedule:
     - cron: 0 16 * * *
   workflow_dispatch:
-
+     ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
   REPO_BRANCH: openwrt-24.10
